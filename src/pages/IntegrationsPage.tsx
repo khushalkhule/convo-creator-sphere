@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -34,7 +33,6 @@ const IntegrationsPage = () => {
   const [hubspotActive, setHubspotActive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch integrations
   const { data: integrations, isLoading, refetch } = useQuery({
     queryKey: ['integrations'],
     queryFn: async () => {
@@ -44,24 +42,24 @@ const IntegrationsPage = () => {
         }
       });
       return response.data;
-    },
-    onSuccess: (data) => {
-      // Update local state based on fetched data
-      data.forEach((integration: Integration) => {
-        if (integration.type === 'zapier') {
-          setZapierWebhook(integration.config.webhook_url || '');
-          setZapierActive(integration.status === 'active');
-        } else if (integration.type === 'instagram') {
-          setInstagramAccount(integration.config.business_account || '');
-          setInstagramDmAutomation(integration.status === 'active');
-          setAiModel(integration.config.ai_model || 'gpt-4o-mini');
-        } else if (integration.type === 'hubspot') {
-          setHubspotApiKey(integration.config.api_key || '');
-          setHubspotActive(integration.status === 'active');
-        }
-      });
     }
   });
+
+  if (integrations && integrations.length > 0) {
+    integrations.forEach((integration: Integration) => {
+      if (integration.type === 'zapier' && zapierWebhook === '') {
+        setZapierWebhook(integration.config.webhook_url || '');
+        setZapierActive(integration.status === 'active');
+      } else if (integration.type === 'instagram' && instagramAccount === '') {
+        setInstagramAccount(integration.config.business_account || '');
+        setInstagramDmAutomation(integration.status === 'active');
+        setAiModel(integration.config.ai_model || 'gpt-4o-mini');
+      } else if (integration.type === 'hubspot' && hubspotApiKey === '') {
+        setHubspotApiKey(integration.config.api_key || '');
+        setHubspotActive(integration.status === 'active');
+      }
+    });
+  }
 
   const handleSaveZapier = async (e: React.FormEvent) => {
     e.preventDefault();
