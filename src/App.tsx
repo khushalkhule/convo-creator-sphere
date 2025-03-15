@@ -14,6 +14,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ChatbotList from "./pages/ChatbotList";
 import ChatbotEdit from "./pages/ChatbotEdit";
 import ChatbotWizard from "./pages/ChatbotWizard";
+import LeadsPage from "./pages/LeadsPage";
+import IntegrationsPage from "./pages/IntegrationsPage";
+import SubscriptionsPage from "./pages/SubscriptionsPage";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +70,21 @@ const AppRoutes = () => {
       <Route path="/chatbots/:id/wizard" element={
         <ProtectedRoute>
           <ChatbotWizard />
+        </ProtectedRoute>
+      } />
+      <Route path="/leads" element={
+        <ProtectedRoute>
+          <LeadsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/integrations" element={
+        <ProtectedRoute>
+          <IntegrationsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/subscription" element={
+        <ProtectedRoute>
+          <SubscriptionsPage />
         </ProtectedRoute>
       } />
       
