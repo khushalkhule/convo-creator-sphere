@@ -1,4 +1,3 @@
-
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
@@ -9,10 +8,18 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
     
+    // Validate input
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please provide name, email and password' });
+    }
+    
+    console.log('Attempting to register user:', email);
+    
     // Check if user already exists
     const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     
     if (users.length > 0) {
+      console.log('User already exists with email:', email);
       return res.status(400).json({ message: 'User already exists with this email' });
     }
     
@@ -23,16 +30,45 @@ exports.register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     
-    // Insert user
-    await pool.query(
-      'INSERT INTO users (id, name, email, password_hash, role, subscription_tier) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, name, email, hashedPassword, 'client', 'free']
-    );
+    console.log('Inserting new user into database...');
     
-    res.status(201).json({ message: 'User registered successfully' });
+    // Insert user with better error handling
+    try {
+      await pool.query(
+        'INSERT INTO users (id, name, email, password_hash, role, subscription_tier) VALUES (?, ?, ?, ?, ?, ?)',
+        [userId, name, email, hashedPassword, 'client', 'free']
+      );
+      
+      console.log('User registered successfully:', userId);
+      
+      res.status(201).json({ message: 'User registered successfully' });
+    } catch (dbError) {
+      console.error('Database error during user insertion:', dbError.message);
+      
+      // Check if it's a table-related error
+      if (dbError.code === 'ER_NO_SUCH_TABLE') {
+        return res.status(500).json({ 
+          message: 'Database table missing. Please ensure the users table exists.',
+          error: dbError.message
+        });
+      }
+      
+      // Check if it's a column-related error
+      if (dbError.code === 'ER_BAD_FIELD_ERROR') {
+        return res.status(500).json({ 
+          message: 'Database schema issue. Please check table structure.',
+          error: dbError.message
+        });
+      }
+      
+      throw dbError;
+    }
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      message: 'Server error during registration', 
+      error: error.message 
+    });
   }
 };
 

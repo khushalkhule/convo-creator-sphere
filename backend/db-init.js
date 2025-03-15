@@ -23,7 +23,7 @@ const createTables = async () => {
         password_hash VARCHAR(255) NOT NULL,
         role VARCHAR(50) NOT NULL DEFAULT 'client',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        last_login TIMESTAMP,
+        last_login TIMESTAMP NULL,
         profile_image VARCHAR(255),
         is_active BOOLEAN DEFAULT TRUE,
         subscription_tier VARCHAR(50) DEFAULT 'free'

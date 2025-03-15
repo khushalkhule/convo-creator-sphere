@@ -12,4 +12,9 @@ router.post('/create-admin', authController.createAdmin);
 // Protected routes
 router.get('/me', auth, authController.getMe);
 
+// Test route to verify the backend is working
+router.get('/test', (req, res) => {
+  res.status(200).json({ message: 'Auth routes working' });
+});
+
 module.exports = router;
