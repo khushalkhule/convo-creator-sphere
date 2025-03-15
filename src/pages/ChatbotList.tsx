@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Settings, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -68,7 +67,7 @@ const ChatbotList = () => {
       
       setNewChatbot({ name: '', description: '' });
       setIsNewChatbotOpen(false);
-      refetch();
+      navigate('/chatbots/new');
     } catch (error) {
       console.error('Failed to create chatbot:', error);
       toast({
@@ -127,65 +126,12 @@ const ChatbotList = () => {
     <div className="container mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Your Chatbots</h1>
-        <Dialog open={isNewChatbotOpen} onOpenChange={setIsNewChatbotOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus size={16} /> Create New Chatbot
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <form onSubmit={handleCreateChatbot}>
-              <DialogHeader>
-                <DialogTitle>Create New Chatbot</DialogTitle>
-                <DialogDescription>
-                  Give your chatbot a name and description to get started.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="name" className="col-span-4">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    placeholder="My Awesome Chatbot"
-                    className="col-span-4"
-                    required
-                    value={newChatbot.name}
-                    onChange={(e) => setNewChatbot({ ...newChatbot, name: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="description" className="col-span-4">
-                    Description
-                  </Label>
-                  <Textarea
-                    id="description"
-                    placeholder="This chatbot helps customers with product information."
-                    className="col-span-4"
-                    value={newChatbot.description}
-                    onChange={(e) => setNewChatbot({ ...newChatbot, description: e.target.value })}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsNewChatbotOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    "Create Chatbot"
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          className="flex items-center gap-2" 
+          onClick={() => navigate('/chatbots/new')}
+        >
+          <Plus size={16} /> Create New Chatbot
+        </Button>
       </div>
 
       {isLoading ? (
@@ -250,7 +196,7 @@ const ChatbotList = () => {
               <p className="text-muted-foreground mb-4">
                 Create your first AI chatbot to start engaging with your website visitors.
               </p>
-              <Button onClick={() => setIsNewChatbotOpen(true)}>
+              <Button onClick={() => navigate('/chatbots/new')}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Your First Chatbot
               </Button>
