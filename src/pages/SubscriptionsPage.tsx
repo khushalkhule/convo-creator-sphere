@@ -16,7 +16,7 @@ interface Plan {
   chatbot_limit: number;
   api_call_limit: number;
   storage_limit: number;
-  features: string[];
+  features: Record<string, boolean>;
 }
 
 interface Subscription {
@@ -296,11 +296,13 @@ const SubscriptionsPage = () => {
                       <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                       <span>{plan.storage_limit} GB storage</span>
                     </li>
-                    {plan.features?.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span>{feature}</span>
-                      </li>
+                    {plan.features && Object.entries(plan.features).map(([feature, isEnabled]) => (
+                      isEnabled && (
+                        <li key={feature} className="flex items-start gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                          <span>{feature.split('_').join(' ')}</span>
+                        </li>
+                      )
                     ))}
                   </ul>
                 </CardContent>

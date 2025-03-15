@@ -10,7 +10,9 @@ import {
   LucideSettings,
   LucideLogOut,
   LucideMenu,
-  LucideX
+  LucideX,
+  LucideLink,
+  LucideBadgeDollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -148,10 +150,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   active={location.pathname.startsWith('/leads')}
                 />
                 <NavItem 
-                  to="/analytics" 
-                  icon={LucideBarChart} 
-                  label="Analytics" 
-                  active={location.pathname.startsWith('/analytics')}
+                  to="/integrations" 
+                  icon={LucideLink} 
+                  label="Integrations" 
+                  active={location.pathname.startsWith('/integrations')}
+                />
+                <NavItem 
+                  to="/subscription" 
+                  icon={LucideBadgeDollarSign} 
+                  label="Subscription" 
+                  active={location.pathname.startsWith('/subscription')}
                 />
                 <NavItem 
                   to="/account" 

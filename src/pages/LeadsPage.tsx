@@ -6,7 +6,6 @@ import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DownloadCloud, Loader2, Search, UserPlus } from "lucide-react";
 import axios from 'axios';
@@ -30,17 +29,24 @@ const LeadsPage = () => {
   const token = localStorage.getItem('token');
 
   // Fetch leads
-  const { data: leads, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['leads'],
     queryFn: async () => {
-      const response = await axios.get(`${API_URL}/api/leads`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      return response.data;
+      try {
+        const response = await axios.get(`${API_URL}/api/leads`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching leads:", error);
+        throw error;
+      }
     }
   });
+
+  const leads = data?.leads || [];
 
   const handleExportLeads = async () => {
     try {
@@ -77,7 +83,7 @@ const LeadsPage = () => {
   const filteredLeads = leads ? leads.filter((lead: Lead) => 
     lead.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lead.phone.toLowerCase().includes(searchQuery.toLowerCase())
+    (lead.phone && lead.phone.toLowerCase().includes(searchQuery.toLowerCase()))
   ) : [];
 
   if (error) {
@@ -166,7 +172,7 @@ const LeadsPage = () => {
                             lead.status === 'contacted' ? 'bg-blue-100 text-blue-800' : 
                             'bg-gray-100 text-gray-800'
                           }`}>
-                            {lead.status}
+                            {lead.status || 'new'}
                           </span>
                         </TableCell>
                       </TableRow>

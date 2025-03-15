@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
 
@@ -27,14 +28,14 @@ const Navbar = () => {
       <div className="container max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between">
           <div className="flex-shrink-0">
-            <a href="#" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <span className="relative flex h-8 w-8 overflow-hidden rounded-full bg-gradient-to-r from-blue-600 to-indigo-600">
                 <span className="flex h-full w-full items-center justify-center text-white font-bold">
                   A
                 </span>
               </span>
               <span className="font-bold text-xl md:text-2xl tracking-tight">AiReply</span>
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Menu */}
@@ -53,14 +54,16 @@ const Navbar = () => {
                 variant="outline" 
                 size="sm"
                 className="transition-all duration-300 hover:border-primary"
+                asChild
               >
-                Sign In
+                <Link to="/login">Sign In</Link>
               </Button>
               <Button 
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-300"
                 size="sm"
+                asChild
               >
-                Get Started
+                <Link to="/register">Get Started</Link>
               </Button>
             </div>
           </div>
@@ -116,13 +119,15 @@ const Navbar = () => {
               <Button 
                 variant="outline" 
                 className="w-full transition-all duration-300 hover:border-primary"
+                asChild
               >
-                Sign In
+                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
               </Button>
               <Button 
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-300"
+                asChild
               >
-                Get Started
+                <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>Get Started</Link>
               </Button>
             </div>
           </div>

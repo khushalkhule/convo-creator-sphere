@@ -17,6 +17,7 @@ import ChatbotWizard from "./pages/ChatbotWizard";
 import LeadsPage from "./pages/LeadsPage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import SubscriptionsPage from "./pages/SubscriptionsPage";
+import Analytics from "./pages/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,11 @@ const AppRoutes = () => {
       <Route path="/subscription" element={
         <ProtectedRoute>
           <SubscriptionsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/analytics" element={
+        <ProtectedRoute>
+          <Analytics />
         </ProtectedRoute>
       } />
       
