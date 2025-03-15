@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { GridPattern } from '@/assets/patterns';
-import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -32,6 +32,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { register: registerUser } = useAuth();
   
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -45,37 +46,11 @@ const Register = () => {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
-    // Remove confirmPassword before sending to API
-    const { confirmPassword, ...registrationData } = data;
-    
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(registrationData),
-      });
-      
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.message || 'Registration failed');
-      }
-      
-      toast({
-        title: "Registration successful",
-        description: "Your account has been created. Please log in.",
-      });
-      
-      navigate('/login');
+      await registerUser(data.name, data.email, data.password);
+      // Navigation is handled in the register function
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Registration failed",
-        description: error instanceof Error ? error.message : "Something went wrong",
-      });
-    } finally {
+      // Error is handled in the register function
       setIsLoading(false);
     }
   };

@@ -4,16 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LucideSettings, LucideMessageCircle, LucideUsers, LucideLogOut } from 'lucide-react';
+import { LucideUsers, LucideMessageCircle, LucidePieChart, LucideSettings, LucideLogOut } from 'lucide-react';
 
-const Dashboard = () => {
+const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   
   return (
     <DashboardLayout>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Client Dashboard</h1>
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <Button variant="outline" onClick={logout} className="flex items-center gap-2">
           <LucideLogOut size={18} />
           Logout
@@ -23,7 +23,7 @@ const Dashboard = () => {
       <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border">
         <h2 className="text-xl font-semibold mb-2">Welcome, {user?.name}!</h2>
         <p className="text-gray-600">
-          Account type: <span className="font-medium capitalize">{user?.subscription_tier}</span>
+          Role: <span className="font-medium text-blue-600 capitalize">{user?.role}</span>
         </p>
       </div>
       
@@ -31,17 +31,35 @@ const Dashboard = () => {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-xl flex items-center gap-2">
-              <LucideMessageCircle className="text-blue-500" />
+              <LucideUsers className="text-blue-500" />
+              User Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">Manage users and their permissions</p>
+            <Button 
+              onClick={() => navigate('/admin/users')}
+              className="w-full"
+            >
+              Manage Users
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <LucideMessageCircle className="text-green-500" />
               Chatbot Management
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-4">Create and manage your AI chatbots</p>
+            <p className="text-gray-600 mb-4">Monitor and manage all chatbots</p>
             <Button 
-              onClick={() => navigate('/chatbots')}
+              onClick={() => navigate('/admin/chatbots')}
               className="w-full"
             >
-              Manage Chatbots
+              View Chatbots
             </Button>
           </CardContent>
         </Card>
@@ -49,17 +67,17 @@ const Dashboard = () => {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-xl flex items-center gap-2">
-              <LucideUsers className="text-green-500" />
-              Lead Management
+              <LucidePieChart className="text-purple-500" />
+              Analytics
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-4">View and manage captured leads</p>
+            <p className="text-gray-600 mb-4">View platform analytics and reports</p>
             <Button 
-              onClick={() => navigate('/leads')}
+              onClick={() => navigate('/admin/analytics')}
               className="w-full"
             >
-              View Leads
+              View Analytics
             </Button>
           </CardContent>
         </Card>
@@ -67,14 +85,14 @@ const Dashboard = () => {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-xl flex items-center gap-2">
-              <LucideSettings className="text-purple-500" />
-              Account Settings
+              <LucideSettings className="text-orange-500" />
+              System Settings
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-4">Manage your account preferences</p>
+            <p className="text-gray-600 mb-4">Configure system-wide settings</p>
             <Button 
-              onClick={() => navigate('/account')}
+              onClick={() => navigate('/admin/settings')}
               className="w-full"
             >
               Settings
@@ -86,4 +104,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default AdminDashboard;

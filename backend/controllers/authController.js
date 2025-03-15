@@ -98,3 +98,30 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Create admin user
+exports.createAdmin = async (req, res) => {
+  try {
+    // Check if admin exists
+    const [admins] = await pool.query('SELECT * FROM users WHERE role = ?', ['admin']);
+    
+    if (admins.length > 0) {
+      return res.status(400).json({ message: 'Admin user already exists' });
+    }
+    
+    const adminId = uuidv4();
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('admin123', salt);
+    
+    // Insert admin user
+    await pool.query(
+      'INSERT INTO users (id, name, email, password_hash, role, subscription_tier) VALUES (?, ?, ?, ?, ?, ?)',
+      [adminId, 'Admin User', 'admin@example.com', hashedPassword, 'admin', 'enterprise']
+    );
+    
+    res.status(201).json({ message: 'Admin user created successfully' });
+  } catch (error) {
+    console.error('Create admin error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
