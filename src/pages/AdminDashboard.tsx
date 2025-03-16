@@ -33,6 +33,7 @@ import { SubscriptionPlans } from '@/components/admin/SubscriptionPlans';
 import { Subscribers } from '@/components/admin/Subscribers';
 import { PlatformUsage } from '@/components/admin/PlatformUsage';
 import { PaymentGateways } from '@/components/admin/PaymentGateways';
+import { SalesOverview } from '@/components/admin/SalesOverview';
 
 // Sample data for API usage chart
 const apiUsageData = [
@@ -280,15 +281,7 @@ const AdminDashboard = () => {
         
         {/* Sales Tab Content */}
         <TabsContent value="sales" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sales Overview</CardTitle>
-              <CardDescription>Revenue and subscription metrics</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Sales dashboard content coming soon...</p>
-            </CardContent>
-          </Card>
+          <SalesOverview />
         </TabsContent>
       </Tabs>
     </DashboardLayout>

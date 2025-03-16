@@ -12,6 +12,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const leadRoutes = require('./routes/leadRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const salesRoutes = require('./routes/salesRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,6 +29,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/integrations', integrationRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/sales', salesRoutes);
 
 // Health check route
 app.get('/health', (req, res) => {
