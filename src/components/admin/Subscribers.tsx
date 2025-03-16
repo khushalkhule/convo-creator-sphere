@@ -11,8 +11,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { toast } from 'sonner';
 
 interface Subscriber {
+  id: string;
   name: string;
   email: string;
   plan: string;
@@ -22,37 +26,69 @@ interface Subscriber {
   status: 'active' | 'inactive';
 }
 
-const subscribers: Subscriber[] = [
-  {
-    name: 'John Doe',
-    email: 'client@chatsass.com',
-    plan: 'Pro',
-    started: '5/10/2023',
-    nextBilling: '5/10/2024',
-    amount: '$49.99/mo',
-    status: 'active'
-  },
-  {
-    name: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    plan: 'Business',
-    started: '6/15/2023',
-    nextBilling: '6/15/2024',
-    amount: '$99.99/mo',
-    status: 'active'
-  },
-  {
-    name: 'Mike Johnson',
-    email: 'mike.johnson@example.com',
-    plan: 'Basic',
-    started: '7/22/2023',
-    nextBilling: '7/22/2024',
-    amount: '$24.99/mo',
-    status: 'inactive'
-  }
-];
-
 export const Subscribers = () => {
+  const { data: subscribers, isLoading, error } = useQuery({
+    queryKey: ['subscribers'],
+    queryFn: async () => {
+      try {
+        const response = await axios.get('/api/subscription/subscribers');
+        return response.data;
+      } catch (err) {
+        console.error('Error fetching subscribers:', err);
+        toast.error('Failed to load subscribers');
+        return [];
+      }
+    }
+  });
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+  };
+
+  const formatCurrency = (amount: number, interval: string) => {
+    return `$${amount.toFixed(2)}/${interval === 'monthly' ? 'mo' : 'yr'}`;
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscribers</CardTitle>
+          <p className="text-sm text-muted-foreground">Loading subscription data...</p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center py-10">
+            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscribers</CardTitle>
+          <p className="text-sm text-muted-foreground">Failed to load subscriber data</p>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-10">
+            <p>Error loading subscribers. Please try again later.</p>
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -60,50 +96,56 @@ export const Subscribers = () => {
         <p className="text-sm text-muted-foreground">Users who have subscribed to paid plans</p>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Plan</TableHead>
-              <TableHead>Started</TableHead>
-              <TableHead>Next Billing</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {subscribers.map((subscriber, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <div>
-                    <p className="font-medium">{subscriber.name}</p>
-                    <p className="text-sm text-muted-foreground">{subscriber.email}</p>
-                  </div>
-                </TableCell>
-                <TableCell>{subscriber.plan}</TableCell>
-                <TableCell>{subscriber.started}</TableCell>
-                <TableCell>{subscriber.nextBilling}</TableCell>
-                <TableCell>{subscriber.amount}</TableCell>
-                <TableCell>
-                  <Badge 
-                    variant={subscriber.status === 'active' ? "success" : "secondary"}
-                    className={`${
-                      subscriber.status === 'active' 
-                      ? 'bg-green-500 hover:bg-green-600' 
-                      : 'bg-gray-500 hover:bg-gray-600'
-                    }`}
-                  >
-                    {subscriber.status === 'active' ? 'Active' : 'Inactive'}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="outline" size="sm">Details</Button>
-                </TableCell>
+        {subscribers && subscribers.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Plan</TableHead>
+                <TableHead>Started</TableHead>
+                <TableHead>Next Billing</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {subscribers.map((subscriber: Subscriber, index: number) => (
+                <TableRow key={subscriber.id || index}>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{subscriber.name}</p>
+                      <p className="text-sm text-muted-foreground">{subscriber.email}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>{subscriber.plan}</TableCell>
+                  <TableCell>{formatDate(subscriber.started)}</TableCell>
+                  <TableCell>{formatDate(subscriber.nextBilling)}</TableCell>
+                  <TableCell>{subscriber.amount}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={subscriber.status === 'active' ? "success" : "secondary"}
+                      className={`${
+                        subscriber.status === 'active' 
+                        ? 'bg-green-500 hover:bg-green-600' 
+                        : 'bg-gray-500 hover:bg-gray-600'
+                      }`}
+                    >
+                      {subscriber.status === 'active' ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm">Details</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-10">
+            <p>No subscribers found</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

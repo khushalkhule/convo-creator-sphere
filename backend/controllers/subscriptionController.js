@@ -1,4 +1,3 @@
-
 const pool = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
 
@@ -296,6 +295,47 @@ exports.cancelSubscription = async (req, res) => {
     });
   } catch (error) {
     console.error('Cancel subscription error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get all subscribers (admin only)
+exports.getAllSubscribers = async (req, res) => {
+  try {
+    // Get all active subscriptions with user details
+    const [subscribers] = await pool.query(
+      `SELECT 
+         u.id as user_id,
+         u.name,
+         u.email,
+         s.id as subscription_id,
+         s.status,
+         s.current_period_start as started,
+         s.current_period_end as next_billing_date,
+         p.name as plan_name,
+         p.price,
+         p.interval
+       FROM user_subscriptions s
+       JOIN users u ON s.user_id = u.id
+       JOIN subscription_plans p ON s.plan_id = p.id
+       ORDER BY s.created_at DESC`
+    );
+    
+    // Format response
+    const formattedSubscribers = subscribers.map(sub => ({
+      id: sub.user_id,
+      name: sub.name,
+      email: sub.email,
+      plan: sub.plan_name,
+      started: sub.started,
+      nextBilling: sub.next_billing_date,
+      amount: `$${sub.price}/${sub.interval === 'monthly' ? 'mo' : 'yr'}`,
+      status: sub.status
+    }));
+    
+    res.status(200).json(formattedSubscribers);
+  } catch (error) {
+    console.error('Get subscribers error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

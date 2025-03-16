@@ -34,6 +34,7 @@ import { Subscribers } from '@/components/admin/Subscribers';
 import { PlatformUsage } from '@/components/admin/PlatformUsage';
 import { PaymentGateways } from '@/components/admin/PaymentGateways';
 import { SalesOverview } from '@/components/admin/SalesOverview';
+import { toast } from 'sonner';
 
 // Sample data for API usage chart
 const apiUsageData = [
@@ -66,6 +67,16 @@ const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const [activeSubTab, setActiveSubTab] = useState("subscription-plans");
+  
+  useEffect(() => {
+    // Check if user is admin
+    if (user && user.role !== 'admin') {
+      toast.error('You do not have access to the admin dashboard');
+      navigate('/dashboard');
+    } else if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
   
   // Function to handle tab change
   const handleTabChange = (value) => {

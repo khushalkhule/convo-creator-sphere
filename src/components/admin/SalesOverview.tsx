@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LucideDollarSign, LucideUsers, LucideTrendingUp, LucideUser } from 'lucide-react';
@@ -8,21 +8,59 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface SalesOverviewProps {
   period?: string;
 }
 
 export const SalesOverview: React.FC<SalesOverviewProps> = ({ period = '6' }) => {
-  const [activePeriod, setActivePeriod] = React.useState(period);
-  const [activeTab, setActiveTab] = React.useState('revenue');
+  const [activePeriod, setActivePeriod] = useState(period);
+  const [activeTab, setActiveTab] = useState('revenue');
   
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['sales-overview', activePeriod],
     queryFn: async () => {
-      const response = await axios.get(`/api/sales/overview?period=${activePeriod}`);
-      return response.data;
+      try {
+        const response = await axios.get(`/api/sales/overview?period=${activePeriod}`);
+        console.log('Sales data:', response.data);
+        return response.data;
+      } catch (err) {
+        console.error('Error fetching sales data:', err);
+        toast.error('Failed to load sales data');
+        throw err;
+      }
     }
+  });
+  
+  // Revenue details query for the Revenue tab
+  const { data: revenueDetails } = useQuery({
+    queryKey: ['revenue-details', activePeriod],
+    queryFn: async () => {
+      try {
+        const response = await axios.get(`/api/sales/revenue?period=${activePeriod}`);
+        return response.data;
+      } catch (err) {
+        console.error('Error fetching revenue details:', err);
+        return [];
+      }
+    },
+    enabled: activeTab === 'revenue'
+  });
+  
+  // Plan distribution query for the Plan Distribution tab
+  const { data: planDistribution } = useQuery({
+    queryKey: ['plan-distribution'],
+    queryFn: async () => {
+      try {
+        const response = await axios.get('/api/sales/plan-distribution');
+        return response.data;
+      } catch (err) {
+        console.error('Error fetching plan distribution:', err);
+        return [];
+      }
+    },
+    enabled: activeTab === 'plan-distribution'
   });
   
   const formatCurrency = (value: number) => {
@@ -43,8 +81,19 @@ export const SalesOverview: React.FC<SalesOverviewProps> = ({ period = '6' }) =>
   
   // Handle export button click
   const handleExport = () => {
-    alert('Export functionality will be implemented here');
+    toast.info('Export functionality will be implemented here');
   };
+  
+  if (error) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <div className="text-center">
+          <h3 className="text-lg font-medium mb-2">Failed to load sales data</h3>
+          <p className="text-muted-foreground">Please check your connection and try again</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
@@ -81,7 +130,9 @@ export const SalesOverview: React.FC<SalesOverviewProps> = ({ period = '6' }) =>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatCurrency(parseFloat(data.overview.totalRevenue))}</div>
-                <p className="text-xs text-green-500">+{data.overview.revenueGrowth}% from previous period</p>
+                <p className={`text-xs ${parseFloat(data.overview.revenueGrowth) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {parseFloat(data.overview.revenueGrowth) >= 0 ? '+' : ''}{data.overview.revenueGrowth}% from previous period
+                </p>
               </CardContent>
             </Card>
             
@@ -94,7 +145,11 @@ export const SalesOverview: React.FC<SalesOverviewProps> = ({ period = '6' }) =>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{data.overview.subscriptions}</div>
-                <p className="text-xs text-green-500">+{Math.round((data.overview.subscriptions / (data.monthlyRevenue[0]?.subscriptions || 1) - 1) * 100)}% from previous period</p>
+                {data.monthlyRevenue && data.monthlyRevenue.length > 0 && (
+                  <p className="text-xs text-green-500">
+                    +{Math.round((data.overview.subscriptions / (data.monthlyRevenue[0]?.subscriptions || 1) - 1) * 100)}% from previous period
+                  </p>
+                )}
               </CardContent>
             </Card>
             
@@ -106,7 +161,9 @@ export const SalesOverview: React.FC<SalesOverviewProps> = ({ period = '6' }) =>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+{data.overview.growthRate}%</div>
+                <div className="text-2xl font-bold">
+                  {parseFloat(data.overview.growthRate) >= 0 ? '+' : ''}{data.overview.growthRate}%
+                </div>
                 <p className="text-xs text-muted-foreground">Month over month</p>
               </CardContent>
             </Card>
@@ -142,7 +199,7 @@ export const SalesOverview: React.FC<SalesOverviewProps> = ({ period = '6' }) =>
                   <div className="h-[400px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart
-                        data={data.monthlyRevenue.map(item => ({
+                        data={revenueDetails || data.monthlyRevenue.map(item => ({
                           name: formatMonth(item.month),
                           value: item.revenue
                         }))}
@@ -209,7 +266,7 @@ export const SalesOverview: React.FC<SalesOverviewProps> = ({ period = '6' }) =>
             </TabsContent>
             
             <TabsContent value="plan-distribution" className="mt-6">
-              <PlanDistribution data={data.planDistribution} />
+              <PlanDistribution data={planDistribution || data.planDistribution} />
             </TabsContent>
           </Tabs>
         </>
@@ -232,6 +289,22 @@ interface PlanDistributionProps {
 }
 
 const PlanDistribution: React.FC<PlanDistributionProps> = ({ data }) => {
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Plan Distribution</CardTitle>
+          <CardDescription>No plan distribution data available</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-10">
+            <p>No data available</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
     <Card>
       <CardHeader>
