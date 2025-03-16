@@ -27,10 +27,11 @@ interface Subscriber {
 }
 
 export const Subscribers = () => {
-  const { data: subscribers, isLoading, error } = useQuery({
+  const { data: subscribers, isLoading, error, refetch } = useQuery({
     queryKey: ['subscribers'],
     queryFn: async () => {
       try {
+        console.log('Fetching subscribers...');
         const response = await axios.get('/api/subscription/subscribers');
         console.log('Subscribers data:', response.data);
         return response.data;
@@ -103,7 +104,7 @@ export const Subscribers = () => {
             <Button 
               variant="outline" 
               className="mt-4"
-              onClick={() => window.location.reload()}
+              onClick={() => refetch()}
             >
               Retry
             </Button>

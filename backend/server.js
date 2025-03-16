@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -16,7 +17,7 @@ const leadRoutes = require('./routes/leadRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
-const salesRoutes = require('./routes/salesRoutes'); // Add this if missing
+const salesRoutes = require('./routes/salesRoutes');
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -26,7 +27,7 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/integrations', integrationRoutes);
 app.use('/api/subscription', subscriptionRoutes);
-app.use('/api/sales', salesRoutes); // Add this if missing
+app.use('/api/sales', salesRoutes);
 
 // Start server
 app.listen(port, () => {

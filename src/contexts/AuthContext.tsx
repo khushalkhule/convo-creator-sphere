@@ -38,7 +38,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
+  // Initialize axios defaults when the component mounts
   useEffect(() => {
+    // Set base URL for all requests
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    axios.defaults.baseURL = apiUrl;
+    
     // Check if user is authenticated on mount
     const initAuth = async () => {
       await checkAuth();
@@ -62,10 +67,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         
         // Verify token with backend
-        const response = await axios.get('http://localhost:5000/api/auth/me');
+        const response = await axios.get('/api/auth/me');
+        
         // Update user data with latest from server
         setUser(response.data);
         
+        console.log('Auth check successful, user:', response.data);
         return true;
       } catch (error) {
         console.error('Token validation error:', error);
@@ -73,6 +80,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return false;
       }
     } else {
+      console.log('No stored token or user found');
       setIsAuthenticated(false);
       setUser(null);
       setToken(null);
@@ -83,12 +91,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string): Promise<void> => {
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
+      console.log('Attempting login for:', email);
+      const response = await axios.post('/api/auth/login', {
         email,
         password
       });
       
       const { token: newToken, user: userData } = response.data;
+      
+      console.log('Login successful, user data:', userData);
       
       // Store in localStorage
       localStorage.setItem('token', newToken);
@@ -114,6 +125,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         navigate('/dashboard');
       }
     } catch (error) {
+      console.error('Login error:', error);
       const errorMessage = error.response?.data?.message || 'Login failed';
       toast({
         variant: "destructive",
