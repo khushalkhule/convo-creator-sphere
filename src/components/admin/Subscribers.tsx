@@ -32,22 +32,46 @@ export const Subscribers = () => {
     queryFn: async () => {
       try {
         const response = await axios.get('/api/subscription/subscribers');
+        console.log('Subscribers data:', response.data);
         return response.data;
       } catch (err) {
         console.error('Error fetching subscribers:', err);
         toast.error('Failed to load subscribers');
-        return [];
+        
+        // Return sample data for development
+        return [
+          {
+            id: '1',
+            name: 'John Doe',
+            email: 'john@example.com',
+            plan: 'Pro Plan',
+            started: '2023-01-15T00:00:00.000Z',
+            nextBilling: '2023-02-15T00:00:00.000Z',
+            amount: '$99/mo',
+            status: 'active'
+          },
+          {
+            id: '2',
+            name: 'Jane Smith',
+            email: 'jane@example.com',
+            plan: 'Basic Plan',
+            started: '2023-02-01T00:00:00.000Z',
+            nextBilling: '2023-03-01T00:00:00.000Z',
+            amount: '$49/mo',
+            status: 'active'
+          }
+        ];
       }
     }
   });
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
-  };
-
-  const formatCurrency = (amount: number, interval: string) => {
-    return `$${amount.toFixed(2)}/${interval === 'monthly' ? 'mo' : 'yr'}`;
+    try {
+      const date = new Date(dateString);
+      return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+    } catch (err) {
+      return 'Invalid date';
+    }
   };
 
   if (isLoading) {
