@@ -1,4 +1,3 @@
-
 const pool = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
 
@@ -26,6 +25,12 @@ exports.createBasicInfo = async (req, res) => {
   try {
     const { name, description, website_url, team } = req.body;
     const user_id = req.user.id;
+    
+    if (!name) {
+      return res.status(400).json({ message: 'Chatbot name is required' });
+    }
+    
+    console.log('Creating chatbot with data:', { name, description, website_url, team });
     
     // Generate UUID for new chatbot
     const chatbotId = uuidv4();
@@ -63,6 +68,8 @@ exports.createBasicInfo = async (req, res) => {
       [configId, chatbotId]
     );
     
+    console.log('Chatbot created with ID:', chatbotId);
+    
     res.status(201).json({
       id: chatbotId,
       name,
@@ -74,7 +81,7 @@ exports.createBasicInfo = async (req, res) => {
     });
   } catch (error) {
     console.error('Create chatbot basic info error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error creating chatbot: ' + error.message });
   }
 };
 
@@ -84,6 +91,8 @@ exports.updateKnowledgeBase = async (req, res) => {
     const { knowledge_base } = req.body;
     const chatbot_id = req.params.id;
     const user_id = req.user.id;
+    
+    console.log('Updating knowledge base for chatbot ID:', chatbot_id, 'with data:', knowledge_base);
     
     // Verify chatbot belongs to user
     const [chatbots] = await pool.query(
@@ -101,6 +110,19 @@ exports.updateKnowledgeBase = async (req, res) => {
       [JSON.stringify(knowledge_base), chatbot_id]
     );
     
+    // Also insert into knowledge_base table if content is provided
+    if (knowledge_base && knowledge_base.content) {
+      const kb_id = uuidv4();
+      const content_type = knowledge_base.type || 'text';
+      
+      await pool.query(
+        'INSERT INTO knowledge_base (id, chatbot_id, content_type, content, source) VALUES (?, ?, ?, ?, ?)',
+        [kb_id, chatbot_id, content_type, knowledge_base.content, knowledge_base.source || '']
+      );
+    }
+    
+    console.log('Knowledge base updated successfully');
+    
     res.status(200).json({
       id: chatbot_id,
       knowledge_base,
@@ -108,7 +130,7 @@ exports.updateKnowledgeBase = async (req, res) => {
     });
   } catch (error) {
     console.error('Update knowledge base error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error updating knowledge base: ' + error.message });
   }
 };
 

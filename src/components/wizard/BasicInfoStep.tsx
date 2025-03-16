@@ -39,6 +39,7 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ data, onChange }) 
               onChange={handleChange}
               placeholder="E.g., Sales Assistant, Support Bot"
               required
+              className={!data.name ? "border-red-300 focus:border-red-500" : ""}
             />
             {!data.name && <p className="text-sm text-red-500">Name is required</p>}
           </div>

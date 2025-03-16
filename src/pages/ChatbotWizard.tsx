@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Check, Bot } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Bot, Loader2 } from 'lucide-react';
 import { BasicInfoStep } from '@/components/wizard/BasicInfoStep';
 import { KnowledgeBaseStep } from '@/components/wizard/KnowledgeBaseStep';
 import { AIModelStep } from '@/components/wizard/AIModelStep';
@@ -46,7 +47,7 @@ interface ChatbotData {
   summary?: any;
 }
 
-// Use an environment variable or a direct backend URL since localhost won't work in deployed environment
+// Use an environment variable or a direct backend URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const ChatbotWizard = () => {
@@ -154,6 +155,17 @@ const ChatbotWizard = () => {
     setLoading(true);
     
     try {
+      // Validate current step data
+      if (currentStep === 1 && !chatbotData.name) {
+        toast({
+          title: 'Missing Information',
+          description: 'Please provide a name for your chatbot.',
+          variant: 'destructive'
+        });
+        setLoading(false);
+        return;
+      }
+      
       // Submit current step data
       let response;
       
@@ -185,13 +197,60 @@ const ChatbotWizard = () => {
             );
           } else {
             // Create new chatbot
-            response = await axios.post(
-              `${API_URL}/wizard/basic-info`,
+            try {
+              response = await axios.post(
+                `${API_URL}/wizard/basic-info`,
+                {
+                  name: chatbotData.name,
+                  description: chatbotData.description,
+                  website_url: chatbotData.website_url,
+                  team: chatbotData.team
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                  }
+                }
+              );
+              
+              console.log('Basic info response:', response.data);
+              
+              // Update chatbot ID in state
+              setChatbotData({
+                ...chatbotData,
+                id: response.data.id
+              });
+            } catch (error) {
+              console.error('Error saving basic info:', error);
+              const errorMessage = error.response?.data?.message || 'Failed to save basic information';
+              toast({
+                title: 'Error',
+                description: errorMessage,
+                variant: 'destructive'
+              });
+              setLoading(false);
+              return;
+            }
+          }
+          break;
+          
+        case 2:
+          // Knowledge Base
+          if (!chatbotData.id) {
+            toast({
+              title: 'Error',
+              description: 'Missing chatbot ID. Please try again.',
+              variant: 'destructive'
+            });
+            setLoading(false);
+            return;
+          }
+          
+          try {
+            response = await axios.put(
+              `${API_URL}/wizard/${chatbotData.id}/knowledge-base`,
               {
-                name: chatbotData.name,
-                description: chatbotData.description,
-                website_url: chatbotData.website_url,
-                team: chatbotData.team
+                knowledge_base: chatbotData.knowledge_base
               },
               {
                 headers: {
@@ -199,30 +258,17 @@ const ChatbotWizard = () => {
                 }
               }
             );
-            
-            console.log('Basic info response:', response.data);
-            
-            // Update chatbot ID in state
-            setChatbotData({
-              ...chatbotData,
-              id: response.data.id
+            console.log('Knowledge base response:', response.data);
+          } catch (error) {
+            console.error('Error saving knowledge base:', error);
+            toast({
+              title: 'Error',
+              description: 'Failed to save knowledge base. Please try again.',
+              variant: 'destructive'
             });
+            setLoading(false);
+            return;
           }
-          break;
-          
-        case 2:
-          // Knowledge Base
-          response = await axios.put(
-            `${API_URL}/wizard/${chatbotData.id}/knowledge-base`,
-            {
-              knowledge_base: chatbotData.knowledge_base
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`
-              }
-            }
-          );
           break;
           
         case 3:
@@ -410,8 +456,8 @@ const ChatbotWizard = () => {
         <div className="flex items-center gap-3">
           <Bot className="h-8 w-8 text-primary" />
           <div>
-            <h1 className="text-3xl font-bold">Create New Chatbot</h1>
-            <p className="text-muted-foreground">Follow the steps below to configure and launch your AI chatbot.</p>
+            <h1 className="text-3xl font-bold">{id ? 'Edit Chatbot' : 'Create New Chatbot'}</h1>
+            <p className="text-muted-foreground">Follow the steps below to configure your AI chatbot.</p>
           </div>
         </div>
         
@@ -436,7 +482,12 @@ const ChatbotWizard = () => {
             disabled={loading}
             className="flex items-center gap-2"
           >
-            {currentStep === 6 ? (
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : currentStep === 6 ? (
               <>
                 <Check className="h-4 w-4" />
                 Create Chatbot

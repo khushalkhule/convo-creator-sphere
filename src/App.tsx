@@ -68,6 +68,11 @@ const AppRoutes = () => {
           <ChatbotWizard />
         </ProtectedRoute>
       } />
+      <Route path="/chatbot/create" element={
+        <ProtectedRoute>
+          <ChatbotWizard />
+        </ProtectedRoute>
+      } />
       <Route path="/chatbots/:id/wizard" element={
         <ProtectedRoute>
           <ChatbotWizard />
@@ -84,6 +89,11 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       <Route path="/subscription" element={
+        <ProtectedRoute>
+          <SubscriptionsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/subscription/upgrade" element={
         <ProtectedRoute>
           <SubscriptionsPage />
         </ProtectedRoute>
