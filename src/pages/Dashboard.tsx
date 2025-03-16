@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -181,7 +180,7 @@ const Dashboard = () => {
                           conversationCount={chatbot.conversation_count || 0}
                           leadCount={chatbot.lead_count || 0}
                           onManage={() => navigate(`/chatbots/${chatbot.id}/edit`)}
-                          onPreview={() => window.open(`/chatbots/${chatbot.id}/preview`, '_blank')}
+                          configuration={chatbot.configuration}
                         />
                       ))
                     ) : null}
