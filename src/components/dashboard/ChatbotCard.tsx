@@ -2,6 +2,7 @@
 import { Settings, MessageSquare, Users, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ChatbotPreview } from './ChatbotPreview';
 
 interface ChatbotCardProps {
   id: string;
@@ -11,7 +12,7 @@ interface ChatbotCardProps {
   conversationCount: number;
   leadCount: number;
   onManage: () => void;
-  onPreview: () => void;
+  configuration?: any;
 }
 
 export const ChatbotCard: React.FC<ChatbotCardProps> = ({
@@ -22,7 +23,7 @@ export const ChatbotCard: React.FC<ChatbotCardProps> = ({
   conversationCount,
   leadCount,
   onManage,
-  onPreview
+  configuration
 }) => {
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -56,10 +57,19 @@ export const ChatbotCard: React.FC<ChatbotCardProps> = ({
           <Settings className="h-4 w-4 mr-2" />
           Manage
         </Button>
-        <Button variant="outline" size="sm" onClick={onPreview}>
-          <ExternalLink className="h-4 w-4 mr-2" />
-          Preview
-        </Button>
+        <ChatbotPreview 
+          chatbot={{ 
+            id, 
+            name, 
+            configuration 
+          }}
+          trigger={
+            <Button variant="outline" size="sm">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+          }
+        />
       </CardFooter>
     </Card>
   );

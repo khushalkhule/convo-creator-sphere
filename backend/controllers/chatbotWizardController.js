@@ -1,3 +1,4 @@
+
 const pool = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
 
@@ -320,8 +321,21 @@ exports.getChatbotSummary = async (req, res) => {
       [chatbot_id]
     );
     
+    if (configs.length === 0) {
+      return res.status(404).json({ message: 'Chatbot configuration not found' });
+    }
+    
     const chatbot = chatbots[0];
     const config = configs[0];
+    
+    // Parse JSON fields from the configuration
+    const parsedConfig = {
+      ...config,
+      knowledge_base: config.knowledge_base ? JSON.parse(config.knowledge_base) : null,
+      suggested_messages: config.suggested_messages ? JSON.parse(config.suggested_messages) : [],
+      footer_links: config.footer_links ? JSON.parse(config.footer_links) : [],
+      lead_form_fields: config.lead_form_fields ? JSON.parse(config.lead_form_fields) : []
+    };
     
     // Format response
     const summary = {
@@ -331,34 +345,40 @@ exports.getChatbotSummary = async (req, res) => {
         website_url: chatbot.website_url
       },
       knowledge_base: {
-        source_type: config.knowledge_base ? JSON.parse(config.knowledge_base).type : 'Direct Text',
-        content: config.knowledge_base ? JSON.parse(config.knowledge_base).content : ''
+        source_type: parsedConfig.knowledge_base ? parsedConfig.knowledge_base.type : 'Direct Text',
+        content: parsedConfig.knowledge_base ? parsedConfig.knowledge_base.content : ''
       },
       ai_model: {
-        model: config.ai_model,
-        temperature: config.temperature,
-        max_tokens: config.max_tokens
+        model: parsedConfig.ai_model,
+        temperature: parsedConfig.temperature,
+        max_tokens: parsedConfig.max_tokens
       },
       design: {
-        theme: config.theme,
-        initial_message: config.initial_message,
-        display_name: config.display_name
+        theme: parsedConfig.theme,
+        initial_message: parsedConfig.initial_message,
+        display_name: parsedConfig.display_name,
+        user_message_color: parsedConfig.user_message_color,
+        suggested_messages: parsedConfig.suggested_messages,
+        footer_links: parsedConfig.footer_links
       },
       lead_form: {
-        enabled: config.lead_form_enabled === 1,
-        title: config.lead_form_title,
-        fields: config.lead_form_fields ? JSON.parse(config.lead_form_fields) : []
+        enabled: parsedConfig.lead_form_enabled === 1,
+        title: parsedConfig.lead_form_title,
+        description: parsedConfig.lead_form_description,
+        success_message: parsedConfig.lead_form_success_message,
+        fields: parsedConfig.lead_form_fields
       }
     };
     
     res.status(200).json({
       id: chatbot_id,
+      configuration: parsedConfig,
       summary,
       step: 6
     });
   } catch (error) {
     console.error('Get chatbot summary error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error getting chatbot summary: ' + error.message });
   }
 };
 

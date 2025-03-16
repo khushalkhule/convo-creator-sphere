@@ -428,7 +428,17 @@ const ChatbotWizard = () => {
       case 4:
         return (
           <DesignStep 
-            data={chatbotData}
+            data={{
+              name: chatbotData.name,
+              theme: chatbotData.theme,
+              initial_message: chatbotData.initial_message,
+              suggested_messages: chatbotData.suggested_messages,
+              display_name: chatbotData.display_name,
+              footer_links: chatbotData.footer_links,
+              user_message_color: chatbotData.user_message_color,
+              auto_open_delay: chatbotData.auto_open_delay,
+              input_placeholder: chatbotData.input_placeholder
+            }}
             onChange={(data) => setChatbotData({...chatbotData, ...data})}
           />
         );

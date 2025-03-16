@@ -1,311 +1,214 @@
 
 import React from 'react';
-import { Check, AlertCircle } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Check, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ChatbotPreview } from '../dashboard/ChatbotPreview';
 
 interface SummaryStepProps {
-  data: {
-    name?: string;
-    description?: string;
-    website_url?: string;
-    team?: string;
-    knowledge_base?: {
-      type: string;
-      content: string;
-      urls?: string[];
-      files?: string[];
-    };
-    ai_model?: string;
-    temperature?: number;
-    max_tokens?: number;
-    theme?: string;
-    initial_message?: string;
-    suggested_messages?: string[];
-    display_name?: string;
-    lead_form_enabled?: boolean;
-    lead_form_title?: string;
-    lead_form_fields?: any[];
-    [key: string]: any;
-  };
+  data: any;
 }
 
 export const SummaryStep: React.FC<SummaryStepProps> = ({ data }) => {
-  // Helper function to check if a section is complete
-  const isSectionComplete = (section: string): boolean => {
-    switch(section) {
-      case 'basic':
-        return !!data.name && !!data.description;
-      case 'knowledge':
-        if (data.knowledge_base?.type === 'text') {
-          return !!data.knowledge_base?.content;
-        } else if (data.knowledge_base?.type === 'urls') {
-          return !!(data.knowledge_base?.urls && data.knowledge_base.urls.length > 0);
-        } else if (data.knowledge_base?.type === 'files') {
-          return !!(data.knowledge_base?.files && data.knowledge_base.files.length > 0);
-        }
-        return false;
-      case 'ai':
-        return !!data.ai_model;
-      case 'design':
-        return !!data.theme && !!data.initial_message && !!data.display_name;
-      case 'lead':
-        if (!data.lead_form_enabled) return true;
-        return !!data.lead_form_title && !!(data.lead_form_fields && data.lead_form_fields.length > 0);
-      default:
-        return false;
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Summary</h2>
         <p className="text-muted-foreground">Review your chatbot configuration before finalizing</p>
       </div>
-
-      <div className="space-y-6">
-        <div className="bg-slate-50 p-4 rounded-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-medium">Basic Information</h3>
-              <p className="text-sm text-muted-foreground">Name, description, and website</p>
-            </div>
-            <div>
-              {isSectionComplete('basic') ? (
-                <div className="flex items-center text-green-600">
-                  <Check className="h-5 w-5 mr-1" />
-                  <span className="text-sm font-medium">Complete</span>
-                </div>
-              ) : (
-                <div className="flex items-center text-amber-600">
-                  <AlertCircle className="h-5 w-5 mr-1" />
-                  <span className="text-sm font-medium">Incomplete</span>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <Separator className="my-3" />
-          
-          <div className="grid gap-2">
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Name:</span>
-              <span className="col-span-2 font-medium">{data.name || 'Not set'}</span>
-            </div>
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Description:</span>
-              <span className="col-span-2">{data.description || 'Not set'}</span>
-            </div>
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Website:</span>
-              <span className="col-span-2">{data.website_url || 'Not set'}</span>
-            </div>
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Team:</span>
-              <span className="col-span-2">{data.team || 'Not set'}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-50 p-4 rounded-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-medium">Knowledge Base</h3>
-              <p className="text-sm text-muted-foreground">Information sources for your chatbot</p>
-            </div>
-            <div>
-              {isSectionComplete('knowledge') ? (
-                <div className="flex items-center text-green-600">
-                  <Check className="h-5 w-5 mr-1" />
-                  <span className="text-sm font-medium">Complete</span>
-                </div>
-              ) : (
-                <div className="flex items-center text-amber-600">
-                  <AlertCircle className="h-5 w-5 mr-1" />
-                  <span className="text-sm font-medium">Incomplete</span>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <Separator className="my-3" />
-          
-          <div className="grid gap-2">
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Type:</span>
-              <span className="col-span-2 capitalize">{data.knowledge_base?.type || 'Not set'}</span>
-            </div>
-            
-            {data.knowledge_base?.type === 'text' && (
-              <div className="grid grid-cols-3 text-sm">
-                <span className="text-muted-foreground">Content:</span>
-                <span className="col-span-2">
-                  {data.knowledge_base?.content ? 
-                    `${data.knowledge_base.content.substring(0, 100)}${data.knowledge_base.content.length > 100 ? '...' : ''}` : 
-                    'Not set'}
-                </span>
+      
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          {/* Basic Info */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <div className="text-sm font-medium">Name</div>
+                <div>{data.name || '(Not provided)'}</div>
               </div>
-            )}
-            
-            {data.knowledge_base?.type === 'urls' && (
-              <div className="grid grid-cols-3 text-sm">
-                <span className="text-muted-foreground">URLs:</span>
-                <span className="col-span-2">
-                  {data.knowledge_base?.urls && data.knowledge_base.urls.length > 0 ? 
-                    `${data.knowledge_base.urls.length} URLs added` : 
-                    'No URLs added'}
-                </span>
+              
+              {data.description && (
+                <div>
+                  <div className="text-sm font-medium">Description</div>
+                  <div>{data.description}</div>
+                </div>
+              )}
+              
+              {data.website_url && (
+                <div>
+                  <div className="text-sm font-medium">Website URL</div>
+                  <div>{data.website_url}</div>
+                </div>
+              )}
+              
+              {data.team && (
+                <div>
+                  <div className="text-sm font-medium">Team</div>
+                  <div>{data.team}</div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* Knowledge Base */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Knowledge Base</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {data.knowledge_base ? (
+                <>
+                  <div>
+                    <div className="text-sm font-medium">Source Type</div>
+                    <div>{data.knowledge_base.type || 'Direct Text'}</div>
+                  </div>
+                  
+                  {data.knowledge_base.content && (
+                    <div>
+                      <div className="text-sm font-medium">Content</div>
+                      <div className="max-h-32 overflow-y-auto border p-2 rounded-md text-sm">
+                        {data.knowledge_base.content.substring(0, 500)}
+                        {data.knowledge_base.content.length > 500 && '...'}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-muted-foreground italic">No knowledge base provided</div>
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* AI Model */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">AI Model Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <div className="text-sm font-medium">Model</div>
+                <div>{data.ai_model || 'gpt-4o-mini'}</div>
               </div>
-            )}
-            
-            {data.knowledge_base?.type === 'files' && (
-              <div className="grid grid-cols-3 text-sm">
-                <span className="text-muted-foreground">Files:</span>
-                <span className="col-span-2">
-                  {data.knowledge_base?.files && data.knowledge_base.files.length > 0 ? 
-                    `${data.knowledge_base.files.length} files uploaded` : 
-                    'No files uploaded'}
-                </span>
+              
+              <div>
+                <div className="text-sm font-medium">Temperature</div>
+                <div>{data.temperature || 0.7}</div>
               </div>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-slate-50 p-4 rounded-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-medium">AI Model</h3>
-              <p className="text-sm text-muted-foreground">Model and its configuration</p>
-            </div>
-            <div>
-              {isSectionComplete('ai') ? (
-                <div className="flex items-center text-green-600">
-                  <Check className="h-5 w-5 mr-1" />
-                  <span className="text-sm font-medium">Complete</span>
+              
+              <div>
+                <div className="text-sm font-medium">Max Tokens</div>
+                <div>{data.max_tokens || 2000}</div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Lead Form */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Lead Form</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <div className="text-sm font-medium">Enabled</div>
+                <div className="flex items-center">
+                  {data.lead_form_enabled ? (
+                    <Check className="h-5 w-5 text-green-500 mr-1" />
+                  ) : (
+                    <X className="h-5 w-5 text-red-500 mr-1" />
+                  )}
+                  {data.lead_form_enabled ? 'Yes' : 'No'}
                 </div>
-              ) : (
-                <div className="flex items-center text-amber-600">
-                  <AlertCircle className="h-5 w-5 mr-1" />
-                  <span className="text-sm font-medium">Incomplete</span>
-                </div>
+              </div>
+              
+              {data.lead_form_enabled && (
+                <>
+                  <div>
+                    <div className="text-sm font-medium">Title</div>
+                    <div>{data.lead_form_title || 'Get in Touch'}</div>
+                  </div>
+                  
+                  {data.lead_form_description && (
+                    <div>
+                      <div className="text-sm font-medium">Description</div>
+                      <div>{data.lead_form_description}</div>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <div className="text-sm font-medium">Fields</div>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {(data.lead_form_fields || []).length > 0 ? (
+                        data.lead_form_fields.map((field: any, index: number) => (
+                          <Badge key={index} variant="outline" className="flex items-center gap-1">
+                            {field.label}
+                            {field.required && <span className="text-red-500">*</span>}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground italic">No fields defined</span>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
-            </div>
-          </div>
-          
-          <Separator className="my-3" />
-          
-          <div className="grid gap-2">
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Model:</span>
-              <span className="col-span-2 font-medium">{data.ai_model || 'Not set'}</span>
-            </div>
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Temperature:</span>
-              <span className="col-span-2">{data.temperature || 'Not set'}</span>
-            </div>
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Max Tokens:</span>
-              <span className="col-span-2">{data.max_tokens || 'Not set'}</span>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
-
-        <div className="bg-slate-50 p-4 rounded-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-medium">Design</h3>
-              <p className="text-sm text-muted-foreground">Appearance and behavior</p>
-            </div>
-            <div>
-              {isSectionComplete('design') ? (
-                <div className="flex items-center text-green-600">
-                  <Check className="h-5 w-5 mr-1" />
-                  <span className="text-sm font-medium">Complete</span>
+        
+        {/* Live Preview Column */}
+        <div className="bg-slate-50 p-4 rounded-lg border">
+          <div className="sticky top-4 space-y-4">
+            <h3 className="font-medium">Chatbot Preview</h3>
+            <ChatbotPreview 
+              chatbot={{
+                id: data.id || 'preview',
+                name: data.name || 'Chatbot Preview',
+                configuration: {
+                  display_name: data.display_name,
+                  theme: data.theme,
+                  initial_message: data.initial_message,
+                  suggested_messages: data.suggested_messages,
+                  user_message_color: data.user_message_color,
+                  input_placeholder: data.input_placeholder,
+                }
+              }}
+            />
+            <div className="mt-4">
+              <h3 className="font-medium mb-2">Design Settings</h3>
+              <div className="space-y-2 text-sm">
+                <div className="grid grid-cols-2">
+                  <span className="text-muted-foreground">Theme:</span>
+                  <span>{data.theme || 'Light'}</span>
                 </div>
-              ) : (
-                <div className="flex items-center text-amber-600">
-                  <AlertCircle className="h-5 w-5 mr-1" />
-                  <span className="text-sm font-medium">Incomplete</span>
+                <div className="grid grid-cols-2">
+                  <span className="text-muted-foreground">Display Name:</span>
+                  <span>{data.display_name || 'AI Assistant'}</span>
                 </div>
-              )}
-            </div>
-          </div>
-          
-          <Separator className="my-3" />
-          
-          <div className="grid gap-2">
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Theme:</span>
-              <span className="col-span-2 capitalize">{data.theme || 'Not set'}</span>
-            </div>
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Display Name:</span>
-              <span className="col-span-2">{data.display_name || 'Not set'}</span>
-            </div>
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Initial Message:</span>
-              <span className="col-span-2">
-                {data.initial_message ? 
-                  `${data.initial_message.substring(0, 50)}${data.initial_message.length > 50 ? '...' : ''}` : 
-                  'Not set'}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Suggested Messages:</span>
-              <span className="col-span-2">
-                {data.suggested_messages && data.suggested_messages.length > 0 ? 
-                  `${data.suggested_messages.length} messages added` : 
-                  'None added'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-50 p-4 rounded-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-medium">Lead Generation</h3>
-              <p className="text-sm text-muted-foreground">Lead capture form configuration</p>
-            </div>
-            <div>
-              {isSectionComplete('lead') ? (
-                <div className="flex items-center text-green-600">
-                  <Check className="h-5 w-5 mr-1" />
-                  <span className="text-sm font-medium">Complete</span>
+                <div className="grid grid-cols-2">
+                  <span className="text-muted-foreground">Auto-open Delay:</span>
+                  <span>{data.auto_open_delay || 0} seconds</span>
                 </div>
-              ) : (
-                <div className="flex items-center text-amber-600">
-                  <AlertCircle className="h-5 w-5 mr-1" />
-                  <span className="text-sm font-medium">Incomplete</span>
+                <div>
+                  <span className="text-muted-foreground">Suggested Messages:</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {(data.suggested_messages || []).length > 0 ? (
+                      data.suggested_messages.map((msg: string, i: number) => (
+                        <Badge key={i} variant="secondary" className="text-xs">
+                          {msg}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-muted-foreground italic">None</span>
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-          
-          <Separator className="my-3" />
-          
-          <div className="grid gap-2">
-            <div className="grid grid-cols-3 text-sm">
-              <span className="text-muted-foreground">Enabled:</span>
-              <span className="col-span-2">{data.lead_form_enabled ? 'Yes' : 'No'}</span>
-            </div>
-            
-            {data.lead_form_enabled && (
-              <>
-                <div className="grid grid-cols-3 text-sm">
-                  <span className="text-muted-foreground">Form Title:</span>
-                  <span className="col-span-2">{data.lead_form_title || 'Not set'}</span>
-                </div>
-                <div className="grid grid-cols-3 text-sm">
-                  <span className="text-muted-foreground">Fields:</span>
-                  <span className="col-span-2">
-                    {data.lead_form_fields && data.lead_form_fields.length > 0 ? 
-                      `${data.lead_form_fields.length} fields configured` : 
-                      'No fields added'}
-                  </span>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>
