@@ -12,14 +12,15 @@ exports.getSubscription = async (req, res) => {
       `SELECT 
          s.id as subscription_id, 
          s.status, 
-         s.next_billing_date,
+         s.current_period_end as next_billing_date,
          p.id as plan_id,
          p.name as plan_name,
          p.price,
          p.chatbot_limit,
-         p.api_call_limit,
+         p.api_calls_limit,
          p.storage_limit,
-         p.features
+         p.features,
+         p.interval
        FROM user_subscriptions s
        JOIN subscription_plans p ON s.plan_id = p.id
        WHERE s.user_id = ? AND s.status = 'active'`,
@@ -60,30 +61,28 @@ exports.getSubscription = async (req, res) => {
           id: subscription.plan_id,
           name: subscription.plan_name,
           price: subscription.price,
+          interval: subscription.interval,
           chatbot_limit: subscription.chatbot_limit,
-          api_call_limit: subscription.api_call_limit,
+          api_call_limit: subscription.api_calls_limit,
           storage_limit: subscription.storage_limit,
-          features: JSON.parse(subscription.features || '{}')
+          features: subscription.features ? JSON.parse(subscription.features) : []
         }
       };
     } else {
-      // Provide default plan info for UI development
+      // Provide default free plan info if no subscription exists
       subscriptionDetails = {
-        id: uuidv4(),
-        status: 'active',
-        next_billing_date: '2024-05-15',
+        id: null,
+        status: 'inactive',
+        next_billing_date: null,
         plan: {
-          id: 'pro-monthly',
-          name: 'Pro',
-          price: 49.99,
-          chatbot_limit: 50,
-          api_call_limit: 100000,
-          storage_limit: 50,
-          features: {
-            team_collaboration: true,
-            white_label: true,
-            advanced_analytics: true
-          }
+          id: 'free',
+          name: 'Free',
+          price: 0,
+          interval: 'monthly',
+          chatbot_limit: 1,
+          api_call_limit: 1000,
+          storage_limit: 100,
+          features: ['1 Chatbot', '1,000 API calls/month', '100MB storage']
         }
       };
     }
@@ -108,19 +107,19 @@ exports.getSubscription = async (req, res) => {
         }
       };
     } else {
-      // Provide sample data for UI development
+      // Provide sample data for new users
       usage = {
         api_calls: {
-          used: 43210,
-          limit: 100000
+          used: 0,
+          limit: subscriptionDetails.plan.api_call_limit
         },
         storage: {
-          used: 12.5,
-          limit: 50
+          used: 0,
+          limit: subscriptionDetails.plan.storage_limit
         },
         chatbots: {
-          used: 12,
-          limit: 50
+          used: 0,
+          limit: subscriptionDetails.plan.chatbot_limit
         }
       };
     }
@@ -133,24 +132,6 @@ exports.getSubscription = async (req, res) => {
       status: invoice.status,
       date: invoice.billing_date
     }));
-    
-    // Provide sample invoices if none exist
-    if (billingHistory.length === 0) {
-      const currentDate = new Date();
-      
-      for (let i = 0; i < 3; i++) {
-        const invoiceDate = new Date(currentDate);
-        invoiceDate.setMonth(currentDate.getMonth() - i);
-        
-        billingHistory.push({
-          id: uuidv4(),
-          invoice_number: `INV-2024-${(4 - i).toString().padStart(2, '0')}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`,
-          amount: 49.99,
-          status: 'paid',
-          date: invoiceDate.toISOString().split('T')[0]
-        });
-      }
-    }
     
     res.status(200).json({
       subscription: subscriptionDetails,
@@ -166,69 +147,23 @@ exports.getSubscription = async (req, res) => {
 // Get available subscription plans
 exports.getPlans = async (req, res) => {
   try {
-    const [plans] = await pool.query('SELECT * FROM subscription_plans');
+    const [plans] = await pool.query('SELECT * FROM subscription_plans ORDER BY price ASC');
     
     // Format plans
     const formattedPlans = plans.map(plan => ({
       id: plan.id,
       name: plan.name,
+      description: plan.description,
       price: plan.price,
+      interval: plan.interval,
+      is_popular: plan.is_popular === 1,
       chatbot_limit: plan.chatbot_limit,
-      api_call_limit: plan.api_call_limit,
+      api_calls_limit: plan.api_calls_limit,
       storage_limit: plan.storage_limit,
-      features: JSON.parse(plan.features || '{}')
+      features: plan.features ? JSON.parse(plan.features) : []
     }));
     
-    // Provide sample data if no plans exist
-    if (formattedPlans.length === 0) {
-      const samplePlans = [
-        {
-          id: 'basic-monthly',
-          name: 'Basic',
-          price: 19.99,
-          chatbot_limit: 5,
-          api_call_limit: 10000,
-          storage_limit: 10,
-          features: {
-            team_collaboration: false,
-            white_label: false,
-            advanced_analytics: false
-          }
-        },
-        {
-          id: 'pro-monthly',
-          name: 'Pro',
-          price: 49.99,
-          chatbot_limit: 50,
-          api_call_limit: 100000,
-          storage_limit: 50,
-          features: {
-            team_collaboration: true,
-            white_label: true,
-            advanced_analytics: true
-          }
-        },
-        {
-          id: 'enterprise-monthly',
-          name: 'Enterprise',
-          price: 199.99,
-          chatbot_limit: 200,
-          api_call_limit: 500000,
-          storage_limit: 250,
-          features: {
-            team_collaboration: true,
-            white_label: true,
-            advanced_analytics: true,
-            dedicated_support: true,
-            custom_integrations: true
-          }
-        }
-      ];
-      
-      res.status(200).json(samplePlans);
-    } else {
-      res.status(200).json(formattedPlans);
-    }
+    res.status(200).json(formattedPlans);
   } catch (error) {
     console.error('Get plans error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -257,16 +192,28 @@ exports.upgradePlan = async (req, res) => {
       [user_id]
     );
     
-    // Calculate next billing date (30 days from now)
+    // Calculate next billing date based on plan interval
     const nextBillingDate = new Date();
-    nextBillingDate.setDate(nextBillingDate.getDate() + 30);
-    const formattedNextBillingDate = nextBillingDate.toISOString().split('T')[0];
+    if (plans[0].interval === 'monthly') {
+      nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+    } else {
+      nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1);
+    }
+    
+    const currentDate = new Date();
     
     if (subscriptions.length > 0) {
       // Update existing subscription
       await pool.query(
-        'UPDATE user_subscriptions SET plan_id = ?, next_billing_date = ? WHERE id = ?',
-        [plan_id, formattedNextBillingDate, subscriptions[0].id]
+        `UPDATE user_subscriptions SET 
+          plan_id = ?, 
+          current_period_start = ?, 
+          current_period_end = ?, 
+          status = 'active',
+          cancel_at_period_end = FALSE,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?`,
+        [plan_id, currentDate, nextBillingDate, subscriptions[0].id]
       );
       
       // Create invoice for the new plan
@@ -283,7 +230,8 @@ exports.upgradePlan = async (req, res) => {
       res.status(200).json({
         subscription_id: subscriptions[0].id,
         plan_id,
-        next_billing_date: formattedNextBillingDate,
+        current_period_start: currentDate,
+        current_period_end: nextBillingDate,
         message: 'Subscription upgraded successfully'
       });
     } else {
@@ -291,9 +239,9 @@ exports.upgradePlan = async (req, res) => {
       const subscriptionId = uuidv4();
       await pool.query(
         `INSERT INTO user_subscriptions 
-           (id, user_id, plan_id, status, next_billing_date) 
-         VALUES (?, ?, ?, 'active', ?)`,
-        [subscriptionId, user_id, plan_id, formattedNextBillingDate]
+           (id, user_id, plan_id, status, current_period_start, current_period_end, cancel_at_period_end) 
+         VALUES (?, ?, ?, 'active', ?, ?, FALSE)`,
+        [subscriptionId, user_id, plan_id, currentDate, nextBillingDate]
       );
       
       // Create invoice
@@ -310,7 +258,8 @@ exports.upgradePlan = async (req, res) => {
       res.status(201).json({
         subscription_id: subscriptionId,
         plan_id,
-        next_billing_date: formattedNextBillingDate,
+        current_period_start: currentDate,
+        current_period_end: nextBillingDate,
         message: 'Subscription created successfully'
       });
     }
@@ -335,15 +284,15 @@ exports.cancelSubscription = async (req, res) => {
       return res.status(404).json({ message: 'No active subscription found' });
     }
     
-    // Update subscription status
+    // Update subscription - set to cancel at period end
     await pool.query(
-      'UPDATE user_subscriptions SET status = "cancelled" WHERE id = ?',
+      'UPDATE user_subscriptions SET cancel_at_period_end = TRUE WHERE id = ?',
       [subscriptions[0].id]
     );
     
     res.status(200).json({
       subscription_id: subscriptions[0].id,
-      message: 'Subscription cancelled successfully'
+      message: 'Subscription will be cancelled at the end of the billing period'
     });
   } catch (error) {
     console.error('Cancel subscription error:', error);

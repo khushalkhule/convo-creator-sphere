@@ -123,15 +123,31 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
   FOREIGN KEY (plan_id) REFERENCES subscription_plans(id)
 );
 
--- Insert default subscription plans if they don't exist
-INSERT IGNORE INTO subscription_plans (id, name, description, price, interval, features, is_popular, chatbot_limit, api_calls_limit, storage_limit)
+-- Insert default subscription plans
+DELETE FROM subscription_plans;
+
+INSERT INTO subscription_plans (id, name, description, price, interval, features, is_popular, chatbot_limit, api_calls_limit, storage_limit)
 VALUES
   (UUID(), 'Free', 'Get started with basic features', 0.00, 'monthly', 
    JSON_ARRAY('1 Chatbot', '1,000 API calls/month', '100MB storage'), 
    FALSE, 1, 1000, 100),
+   
   (UUID(), 'Pro', 'Perfect for growing businesses', 49.99, 'monthly', 
    JSON_ARRAY('5 Chatbots', '50,000 API calls/month', '5GB storage', 'Advanced customization', 'Priority support'), 
    TRUE, 5, 50000, 5000),
+   
   (UUID(), 'Enterprise', 'For large organizations', 199.99, 'monthly', 
    JSON_ARRAY('Unlimited Chatbots', 'Unlimited API calls', 'Unlimited storage', 'White labeling', 'Custom AI models', 'Dedicated support', 'SSO'), 
+   FALSE, 999, 999999, 999999),
+   
+  (UUID(), 'Free', 'Get started with basic features', 0.00, 'yearly', 
+   JSON_ARRAY('1 Chatbot', '1,000 API calls/month', '100MB storage'), 
+   FALSE, 1, 1000, 100),
+   
+  (UUID(), 'Pro', 'Perfect for growing businesses', 499.99, 'yearly', 
+   JSON_ARRAY('5 Chatbots', '50,000 API calls/month', '5GB storage', 'Advanced customization', 'Priority support', '2 months free'), 
+   TRUE, 5, 50000, 5000),
+   
+  (UUID(), 'Enterprise', 'For large organizations', 1999.99, 'yearly', 
+   JSON_ARRAY('Unlimited Chatbots', 'Unlimited API calls', 'Unlimited storage', 'White labeling', 'Custom AI models', 'Dedicated support', 'SSO', '2 months free'), 
    FALSE, 999, 999999, 999999);
