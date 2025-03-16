@@ -31,7 +31,7 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ data, onChange }) 
       <div className="space-y-4">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Chatbot Name</Label>
+            <Label htmlFor="name">Chatbot Name <span className="text-red-500">*</span></Label>
             <Input
               id="name"
               name="name"
@@ -40,6 +40,7 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ data, onChange }) 
               placeholder="E.g., Sales Assistant, Support Bot"
               required
             />
+            {!data.name && <p className="text-sm text-red-500">Name is required</p>}
           </div>
 
           <div className="space-y-2">

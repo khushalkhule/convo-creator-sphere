@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -47,7 +46,8 @@ interface ChatbotData {
   summary?: any;
 }
 
-const API_URL = 'http://localhost:5000/api';
+// Use an environment variable or a direct backend URL since localhost won't work in deployed environment
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const ChatbotWizard = () => {
   const { id } = useParams<{ id: string }>();
@@ -117,6 +117,11 @@ const ChatbotWizard = () => {
       setSteps(response.data);
     } catch (error) {
       console.error('Error fetching wizard steps:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load wizard steps. Please check your connection.',
+        variant: 'destructive'
+      });
     }
   };
   
@@ -137,7 +142,7 @@ const ChatbotWizard = () => {
       console.error('Error fetching chatbot data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load chatbot data',
+        description: 'Failed to load chatbot data. Please try again.',
         variant: 'destructive'
       });
     } finally {
@@ -155,6 +160,13 @@ const ChatbotWizard = () => {
       switch (currentStep) {
         case 1:
           // Basic Info
+          console.log('Submitting basic info:', {
+            name: chatbotData.name,
+            description: chatbotData.description,
+            website_url: chatbotData.website_url,
+            team: chatbotData.team
+          });
+          
           if (id) {
             // Update existing chatbot
             response = await axios.put(
@@ -187,6 +199,8 @@ const ChatbotWizard = () => {
                 }
               }
             );
+            
+            console.log('Basic info response:', response.data);
             
             // Update chatbot ID in state
             setChatbotData({
@@ -306,9 +320,15 @@ const ChatbotWizard = () => {
       
     } catch (error) {
       console.error(`Error saving step ${currentStep}:`, error);
+      let errorMessage = `Failed to save step ${currentStep}. Please try again.`;
+      
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       toast({
         title: 'Error',
-        description: `Failed to save step ${currentStep}. Please try again.`,
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
