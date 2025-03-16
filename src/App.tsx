@@ -1,134 +1,147 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import React from 'react';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { useAuth } from './contexts/AuthContext';
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 import ChatbotList from "./pages/ChatbotList";
-import ChatbotEdit from "./pages/ChatbotEdit";
 import ChatbotWizard from "./pages/ChatbotWizard";
+import ChatbotEdit from "./pages/ChatbotEdit";
+import Analytics from "./pages/Analytics";
 import LeadsPage from "./pages/LeadsPage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import SubscriptionsPage from "./pages/SubscriptionsPage";
-import Analytics from "./pages/Analytics";
-
-const queryClient = new QueryClient();
+import AdminDashboard from "./pages/AdminDashboard";
+import CheckoutPage from "./pages/CheckoutPage";
+import NotFound from "./pages/NotFound";
 
 // Protected route component
-const ProtectedRoute = ({ children, allowedRoles = ['client', 'admin'] }) => {
-  const { isAuthenticated, user, loading } = useAuth();
-  
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  
-  if (!isAuthenticated) {
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  if (!user) {
     return <Navigate to="/login" />;
   }
-  
-  if (user && !allowedRoles.includes(user.role)) {
+  return <>{children}</>;
+};
+
+// Admin route component
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  if (!user || user.role !== 'admin') {
     return <Navigate to="/dashboard" />;
   }
-  
-  return children;
+  return <>{children}</>;
 };
 
-const AppRoutes = () => {
+// Define routes
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+    errorElement: <NotFound />
+  },
+  {
+    path: "/login",
+    element: <Login />
+  },
+  {
+    path: "/register",
+    element: <Register />
+  },
+  {
+    path: "/dashboard",
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/chatbots",
+    element: (
+      <ProtectedRoute>
+        <ChatbotList />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/chatbot-wizard",
+    element: (
+      <ProtectedRoute>
+        <ChatbotWizard />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/chatbot/:id",
+    element: (
+      <ProtectedRoute>
+        <ChatbotEdit />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/analytics",
+    element: (
+      <ProtectedRoute>
+        <Analytics />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/leads",
+    element: (
+      <ProtectedRoute>
+        <LeadsPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/integrations",
+    element: (
+      <ProtectedRoute>
+        <IntegrationsPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/subscription",
+    element: (
+      <ProtectedRoute>
+        <SubscriptionsPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/checkout/:planId",
+    element: (
+      <ProtectedRoute>
+        <CheckoutPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/admin",
+    element: (
+      <AdminRoute>
+        <AdminDashboard />
+      </AdminRoute>
+    )
+  }
+]);
+
+function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      
-      {/* Client routes */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/chatbots" element={
-        <ProtectedRoute>
-          <ChatbotList />
-        </ProtectedRoute>
-      } />
-      <Route path="/chatbots/:id/edit" element={
-        <ProtectedRoute>
-          <ChatbotEdit />
-        </ProtectedRoute>
-      } />
-      <Route path="/chatbots/new" element={
-        <ProtectedRoute>
-          <ChatbotWizard />
-        </ProtectedRoute>
-      } />
-      <Route path="/chatbot/create" element={
-        <ProtectedRoute>
-          <ChatbotWizard />
-        </ProtectedRoute>
-      } />
-      <Route path="/chatbots/:id/wizard" element={
-        <ProtectedRoute>
-          <ChatbotWizard />
-        </ProtectedRoute>
-      } />
-      <Route path="/leads" element={
-        <ProtectedRoute>
-          <LeadsPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/integrations" element={
-        <ProtectedRoute>
-          <IntegrationsPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/subscription" element={
-        <ProtectedRoute>
-          <SubscriptionsPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/subscription/upgrade" element={
-        <ProtectedRoute>
-          <SubscriptionsPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/analytics" element={
-        <ProtectedRoute>
-          <Analytics />
-        </ProtectedRoute>
-      } />
-      
-      {/* Admin routes */}
-      <Route path="/admin/dashboard" element={
-        <ProtectedRoute allowedRoles={['admin']}>
-          <AdminDashboard />
-        </ProtectedRoute>
-      } />
-      
-      {/* Catch-all route */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <React.StrictMode>
+      <RouterProvider router={router} />
+    </React.StrictMode>
   );
-};
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+}
 
 export default App;
